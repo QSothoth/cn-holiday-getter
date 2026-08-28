@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>敖尹桌宠</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="pet-root" aria-label="敖尹 Live2D 桌宠">
+    <canvas id="live2d-canvas"></canvas>
+    <div id="speech" role="status" aria-live="polite"></div>
+    <div id="hint">双击眼镜 · G 键摘下 / 戴回</div>
+    <div id="context-menu" class="menu" hidden>
+      <button data-action="glasses">摘下眼镜</button>
+      <button data-action="sleep">休息一下</button>
+      <button data-action="click-through">开启点击穿透</button>
+      <button data-action="hide">隐藏桌宠</button>
+      <button data-action="quit" class="danger">退出</button>
+    </div>
+  </main>
+  <script src="assets/runtime/live2dcubismcore.min.js"></script>
+  <script src="assets/runtime/pixi.min.js"></script>
+  <script src="assets/runtime/cubism4.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
