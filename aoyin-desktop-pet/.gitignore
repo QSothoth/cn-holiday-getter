@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+src-tauri/target/
+target/
+*.log
+docs/_glasses_frames/
+app/assets/model/aoyin/_upstream/
