@@ -1,0 +1,65 @@
+name: Ao Yin Live2D bootstrap assets
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/aoyin-bootstrap-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Collect Haruto Live2D sample model
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/model bundle/vendor bundle/licenses
+          git clone --depth 1 https://github.com/zenghongtu/live2d-model-assets.git upstream-models
+          cp -R upstream-models/assets/moc/haruto/. bundle/model/
+          cp upstream-models/LICENSE bundle/licenses/live2d-model-assets-LICENSE 2>/dev/null || true
+
+      - name: Collect browser runtimes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm install --ignore-scripts --no-audit --no-fund \
+            pixi.js@6.5.10 \
+            pixi-live2d-display@0.4.0 \
+            live2d-widget@3.1.4
+          cp node_modules/pixi.js/dist/browser/pixi.min.js bundle/vendor/pixi.min.js
+          cp node_modules/pixi-live2d-display/dist/cubism2.min.js bundle/vendor/pixi-live2d-display-cubism2.min.js
+          LIVE2D_CORE="$(find node_modules/live2d-widget -type f -name 'live2d.min.js' | head -n 1)"
+          test -n "$LIVE2D_CORE"
+          cp "$LIVE2D_CORE" bundle/vendor/live2d.min.js
+          cp node_modules/pixi-live2d-display/LICENSE bundle/licenses/pixi-live2d-display-LICENSE
+          cp node_modules/pixi.js/LICENSE bundle/licenses/pixi-LICENSE
+
+      - name: Write provenance
+        shell: bash
+        run: |
+          cat > bundle/PROVENANCE.md <<'EOF'
+          # Bootstrap provenance
+
+          - Live2D sample model source: https://github.com/zenghongtu/live2d-model-assets/tree/master/assets/moc/haruto
+          - Original sample/model terms: https://www.live2d.com/en/learn/sample/model-terms/
+          - PixiJS: 6.5.10
+          - pixi-live2d-display: 0.4.0
+          - live2d-widget runtime package: 3.1.4
+
+          This artifact is an engineering input for a non-commercial fan prototype. Review all upstream terms before redistribution.
+          EOF
+          find bundle -type f -print0 | sort -z | xargs -0 sha256sum > bundle/SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aoyin-live2d-bootstrap-assets
+          path: bundle
+          if-no-files-found: error
+          retention-days: 1
