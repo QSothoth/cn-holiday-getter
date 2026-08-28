@@ -1,0 +1,55 @@
+name: Ao Yin Live2D bootstrap
+
+on:
+  push:
+    branches:
+      - agent/aoyin-live2d
+    paths:
+      - .github/workflows/aoyin-bootstrap.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download runtime and licensed Haruto sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/aoyin-bootstrap"
+          model="$root/haruto/model"
+          mkdir -p "$model/haruto.2048" "$model/motion" "$root/runtime"
+
+          base="https://raw.githubusercontent.com/huangcheng/Seelie/main/assets/packs/haruto/model"
+          curl -fL --retry 3 "$base/haruto.moc3" -o "$model/haruto.moc3"
+          curl -fL --retry 3 "$base/haruto.model3.json" -o "$model/haruto.model3.json"
+          curl -fL --retry 3 "$base/haruto.cdi3.json" -o "$model/haruto.cdi3.json"
+          curl -fL --retry 3 "$base/haruto.physics3.json" -o "$model/haruto.physics3.json"
+          curl -fL --retry 3 "$base/haruto.2048/texture_00.png" -o "$model/haruto.2048/texture_00.png"
+          for f in 01 02 03 04 05 06 07 08 09 idle idle_02; do
+            curl -fL --retry 3 "$base/motion/$f.motion3.json" -o "$model/motion/$f.motion3.json"
+          done
+          curl -fL --retry 3 "https://raw.githubusercontent.com/huangcheng/Seelie/main/assets/packs/haruto/preview.png" -o "$root/haruto/preview.png"
+
+          curl -fL --retry 3 "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js" -o "$root/runtime/live2dcubismcore.min.js"
+          curl -fL --retry 3 "https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js" -o "$root/runtime/pixi.min.js"
+          curl -fL --retry 3 "https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js" -o "$root/runtime/cubism4.min.js"
+
+          cat > "$root/NOTICE.txt" <<'EOF'
+          Haruto sample model: © Live2D Inc.; used under the Free Material License Agreement.
+          https://www.live2d.com/en/learn/sample/koharu-haruto/
+          https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html
+          EOF
+          find "$root" -type f -print0 | sort -z | xargs -0 sha256sum > "$root/SHA256SUMS"
+
+      - name: Upload bootstrap bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: aoyin-live2d-bootstrap
+          path: ${{ runner.temp }}/aoyin-bootstrap
+          if-no-files-found: error
+          retention-days: 1
